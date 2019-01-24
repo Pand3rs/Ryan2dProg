@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 		xb += fx;
 		yb += fy;
 		
-		if (xb < screen_width - .5 * bsize)
+		if (xb < screen_width * .5 - .5 * bsize)
 		{
 			ylp = yb;
 		}
