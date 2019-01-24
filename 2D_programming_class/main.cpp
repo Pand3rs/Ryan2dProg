@@ -187,13 +187,13 @@ int main(int argc, char **argv)
 		//left paddle cols
 		if (xb <= xlp + paddlew && yb + bsize <= ylp + paddleh && yb + paddleh <= ylp + paddleh)
 		{
-			fx *= -1.1;
+			fx *= -1;
 		}
 
 		//right paddle cols
 		if (xb + bsize >= xrp && yb + bsize >= yrp && yb + bsize <= yrp + paddleh)
 		{
-			fx *= -1.1;
+			fx *= -1;
 		}
 
 		xb += fx;
