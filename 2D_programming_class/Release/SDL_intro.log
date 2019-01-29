@@ -1,0 +1,14 @@
+﻿  main.cpp
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(81): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(83): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(93): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(96): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(125): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(126): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(127): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(128): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\ryan\documents\flocking_fps\ryan2dprog\2d_programming_class\main.cpp(163): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  Generating code
+  All 6 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  SDL_intro.vcxproj -> C:\Users\Ryan\Documents\flocking_fps\Ryan2dProg\2D_programming_class\Release\SDL_intro.exe
