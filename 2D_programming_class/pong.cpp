@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 	for (;;)
 	{
 		memcpy(prev_key_state, keys, 256);
-		
+
 		//clear screen
 		for (int i = 0; i < screen_width*screen_height; i++)
 		{
@@ -183,10 +183,11 @@ int main(int argc, char **argv)
 		{
 			fy *= -1;
 		}
-		
+
 		//left paddle cols
-		if (xb <= xlp + paddlew && yb + bsize <= ylp + paddleh && yb + paddleh <= ylp + paddleh)
+		if (xb <= xlp + paddlew && yb + bsize <= ylp + paddleh && yb + bsize <= ylp + paddleh)
 		{
+			printf("left \n");
 			fx *= -1;
 		}
 
@@ -198,16 +199,30 @@ int main(int argc, char **argv)
 
 		xb += fx;
 		yb += fy;
-		
+
 		if (xb < screen_width * .5 - .5 * bsize)
-		{
-			ylp = yb;
+		{	
+			if (ylp + paddleh / 2 < yb)
+			{
+				ylp++;
+			}
+			else if (ylp + paddleh / 2 > yb)
+			{
+				ylp--;
+			}
 		}
 		else
 		{
-			yrp = yb;
+			if (yrp + paddleh / 2 < yb)
+			{
+				yrp++;
+			}
+			else if (yrp + paddleh / 2 > yb)
+			{
+				yrp--;
+			}
 		}
-		
+
 		//clip paddles
 		if (ylp > screen_height - paddleh)
 		{
