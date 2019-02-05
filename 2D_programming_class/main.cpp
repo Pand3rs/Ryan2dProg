@@ -16,7 +16,7 @@ using namespace std;
 SDL_Renderer *renderer = NULL;
 int screen_width = 800;
 int screen_height = 600;
-int num_balls = 2;
+int num_balls = 100;
 
 unsigned char prev_key_state[256];
 unsigned char *keys = NULL;
@@ -98,13 +98,12 @@ void drawLine(unsigned char* buffer, float x1, float y1, float x2, float y2, int
 	}
 }
 
-void impulse(struct ball a, struct ball b, float mass1, float mass2, int size, int x)
+void impulse(ball *a, ball *b, float mass1, float mass2, int size, int x)
 {
 	float w = size;
 	float h = size;
-	float dx = a.x - b.x;//W/H not accounted for since perfect squares
-	float dy = a.y - b.y;
-	printf("start:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
+	float dx = a->x - b->x;//W/H not accounted for since perfect squares
+	float dy = a->y - b->y;
 
 	int n1, n2;
 	if (x == 1)
@@ -132,37 +131,34 @@ void impulse(struct ball a, struct ball b, float mass1, float mass2, int size, i
 		n1 = 0;
 		n2 = 0;
 	}
+	printf("n1:%d n2:%d\n", n1, n2);
+	float rel_vel_x = b->fx - a->fx;
+	float rel_vel_y = b->fy - a->fy;
 
-	float rel_vel_x = b.fx - a.fx;
-	float rel_vel_y = b.fy - a.fy;
-	a.fx -= rel_vel_x;
-	a.fy -= rel_vel_y;
-	printf("after rel vel:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
-
-	float dot = a.x * n1 + a.y * n2; //replace: rel_vel_x * n1 + rel_vel_y * n2;
+	float dot = rel_vel_x * n1 + rel_vel_y * n2;
 	if (dot < 0) return;
 
 	float absorbtion = 1.0;
-	float g = -(1.0 + absorbtion) * dot;
-
-	printf("g is %f\n", g);
-
+	float g = -(1.0 + absorbtion) * dot / (mass1 + mass2);
+	printf("n1:%d g:%f\n", n1, g);
 	float impulse_ax = n1 * g;
 	float impulse_ay = n2 * g;
-	impulse_ax *= mass1 * g;
-	impulse_ay *= mass1 * g;
 
 	float impulse_bx = n1 * g;
 	float impulse_by = n2 * g;
-	impulse_bx *= mass2 * g;
-	impulse_by *= mass2 * g;
 
-	a.fx -= impulse_ax;
-	a.fy -= impulse_ay;
-	b.fx += impulse_bx;
-	b.fy += impulse_by;
+	printf("impulse x:%f impulse y:%f\n", impulse_ax, impulse_ay);
+	if (impulse_ay > 30)
+	{
+		getchar();
+	}
+	a->fx -= impulse_ax;
+	a->fy -= impulse_ay;
+	b->fx += impulse_bx;
+	b->fy += impulse_by;
 
-	/*float mt = 1.0 / (mass1 + mass2);
+/*
+	float mt = 1.0 / (mass1 + mass2);
 
 	float tangent_x = n1;
 	float tangent_y = -n2;
@@ -170,39 +166,35 @@ void impulse(struct ball a, struct ball b, float mass1, float mass2, int size, i
 	tangent_x *= -tangent_d * mt;
 	tangent_y *= -tangent_d * mt;
 
-
-	printf("after impulse:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
-	a.fx -= tangent_x;
-	a.fy -= tangent_y;
-	b.fx += tangent_x;
-	b.fy += tangent_y;
-
-	printf("after tangent:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);*/
+	a->fx -= tangent_x;
+	a->fy -= tangent_y;
+	b->fx += tangent_x;
+	b->fy += tangent_y;
+*/
 }
 
-void collision(struct ball a, struct ball b, float mass1, float mass2, int size)
+void collision(ball *a, ball *b, float mass1, float mass2, int size)
 {
-	if (a.x + size < b.x || a.x > b.x + size) return;
-	else if (a.y + size < b.y || a.y > b.y + size) return;
+	if (a->x + size < b->x || a->x > b->x + size) return;
+	else if (a->y + size < b->y || a->y > b->y + size) return;
 	else
 	{
 
-		/*float dx = a.x - b.x;//W/H not accounted for since perfect squares
-		float dy = a.y - b.y;
+		float dx = a->x - b->x;//W/H not accounted for since perfect squares
+		float dy = a->y - b->y;
 		int x = 0;
-
 		float wy = size * dy;
 		float hx = size * dx;
 		if (wy > hx)
 		{
-			x = (wy + hx > 0) ? 1 : 2; //one line if statement
-			//impulse(a, b, mass1, mass2, size, x);
+			x = (wy + hx > 0) ? 3 : 4; //one line if statement
+			impulse(a, b, mass1, mass2, size, x);
 		}
 		else
 		{
-			x = (wy + hx > 0) ? 3 : 4;
-			//impulse(a, b, mass1, mass2, size, x);
-		}*/
+			x = (wy + hx > 0) ? 2 : 1;
+			impulse(a, b, mass1, mass2, size, x);
+		}
 	}
 }
 
@@ -225,7 +217,7 @@ int main(int argc, char **argv)
 	unsigned char *my_own_buffer = (unsigned char*)malloc(sizeof(unsigned char)*screen_width*screen_height * 4);
 	ball *balls_array = (ball*)malloc(sizeof(ball)*num_balls);
 
-	int bsize = 100;
+	int bsize = 20;
 	int counter = 0;
 	int t1 = SDL_GetTicks();
 	for (int i = 0; i < num_balls; i++)
@@ -278,28 +270,13 @@ int main(int argc, char **argv)
 			{
 				if (i != j)
 				{
-					if (balls_array[i].x + bsize >= balls_array[j].x && balls_array[i].x <= balls_array[j].x)
-					{
-						printf("x %f\n", balls_array[i].fx);
-						balls_array[i].fx *= -1.0;
-						printf("x %f\n", balls_array[i].fx);
-						getchar();
-					}
-					if (balls_array[i].y + bsize >= balls_array[j].y && balls_array[i].y <= balls_array[j].y)
-					{
-						printf("y %f\n", balls_array[i].fy);
-						balls_array[i].fy *= -1.0;
-						printf("y %f\n", balls_array[i].fy);
-						getchar();
-					}
-					//collision(balls_array[i], balls_array[j], 1.0, 1.0, bsize);
+					collision(&balls_array[i], &balls_array[j], 1.0, 1.0, bsize);
 				}
 			}
 		}
 		
 		for (int k = 0; k < num_balls; k++)
 		{
-			printf("x to be added %f\n", balls_array[k].fx);
 			balls_array[k].x += balls_array[k].fx;
 			balls_array[k].y += balls_array[k].fy;
 		}
