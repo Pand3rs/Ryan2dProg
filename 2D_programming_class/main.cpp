@@ -16,26 +16,24 @@ using namespace std;
 SDL_Renderer *renderer = NULL;
 int screen_width = 800;
 int screen_height = 600;
+int num_balls = 2;
 
 unsigned char prev_key_state[256];
 unsigned char *keys = NULL;
 SDL_Window *window = NULL;
-
-
-void set_Pixel(unsigned char* buffer, int width, int x, int y, int r, int g, int b, int a)
-{
-	int first_byte_of_the_pixel = y * width * 4 + x * 4;
-	buffer[first_byte_of_the_pixel] = r;
-	buffer[first_byte_of_the_pixel + 1] = g;
-	buffer[first_byte_of_the_pixel + 2] = b;
-	buffer[first_byte_of_the_pixel + 3] = a;
-}
 
 //Alternative example
 struct Pixel
 {
 	unsigned char r, g, b, a;
 };
+
+struct ball
+{
+	float x, y, fx, fy;
+	unsigned char r, g, b, a;
+};
+
 void set_Pixel_Alternative(unsigned char* buffer, int width, int x, int y, int r, int g, int b, int a)
 {
 	Pixel *p = (Pixel*)buffer;
@@ -55,24 +53,6 @@ void fill_Rectangle(unsigned char*buffer, int buffer_width, int buffer_height, i
 			int y = j + rect_y;
 			set_Pixel_Alternative(buffer, screen_width, x, y, r, g, b, a);
 		}
-	}
-}
-
-void greyscale(float * dst, unsigned char * src, int w, int h)
-{
-	for (int i = 0; i < screen_width*screen_height; i++)
-	{
-		dst[i] = src[i * 4] + src[i * 4 + 1] + src[i * 4 + 2] / (3 * 255);
-	}
-}
-
-void recolor(unsigned char * dst, float * src, int w, int h)
-{
-	for (int i = 0; i < w*h; i++)
-	{
-		dst[i * 4] = src[i] * 255;
-		dst[i * 4 + 1] = src[i] * 255;
-		dst[i * 4 + 2] = src[i] * 255;
 	}
 }
 
@@ -118,51 +98,151 @@ void drawLine(unsigned char* buffer, float x1, float y1, float x2, float y2, int
 	}
 }
 
+void impulse(struct ball a, struct ball b, float mass1, float mass2, int size, int x)
+{
+	float w = size;
+	float h = size;
+	float dx = a.x - b.x;//W/H not accounted for since perfect squares
+	float dy = a.y - b.y;
+	printf("start:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
+
+	int n1, n2;
+	if (x == 1)
+	{
+		n1 = 0;
+		n2 = -1;
+	}
+	else if (x == 2)
+	{
+		n1 = 1;
+		n2 = 0;
+	}
+	else if (x == 3)
+	{
+		n1 = 0;
+		n2 = 1;
+	}
+	else if (x == 4)
+	{
+		n1 = -1;
+		n2 = 0;
+	}
+	else if (x == 0)
+	{
+		n1 = 0;
+		n2 = 0;
+	}
+
+	float rel_vel_x = b.fx - a.fx;
+	float rel_vel_y = b.fy - a.fy;
+	a.fx -= rel_vel_x;
+	a.fy -= rel_vel_y;
+	printf("after rel vel:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
+
+	float dot = a.x * n1 + a.y * n2; //replace: rel_vel_x * n1 + rel_vel_y * n2;
+	if (dot < 0) return;
+
+	float absorbtion = 1.0;
+	float g = -(1.0 + absorbtion) * dot;
+
+	printf("g is %f\n", g);
+
+	float impulse_ax = n1 * g;
+	float impulse_ay = n2 * g;
+	impulse_ax *= mass1 * g;
+	impulse_ay *= mass1 * g;
+
+	float impulse_bx = n1 * g;
+	float impulse_by = n2 * g;
+	impulse_bx *= mass2 * g;
+	impulse_by *= mass2 * g;
+
+	a.fx -= impulse_ax;
+	a.fy -= impulse_ay;
+	b.fx += impulse_bx;
+	b.fy += impulse_by;
+
+	/*float mt = 1.0 / (mass1 + mass2);
+
+	float tangent_x = n1;
+	float tangent_y = -n2;
+	float tangent_d = rel_vel_x * tangent_x + rel_vel_y * tangent_y;
+	tangent_x *= -tangent_d * mt;
+	tangent_y *= -tangent_d * mt;
+
+
+	printf("after impulse:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);
+	a.fx -= tangent_x;
+	a.fy -= tangent_y;
+	b.fx += tangent_x;
+	b.fy += tangent_y;
+
+	printf("after tangent:: a fx:%f, fy:%f, b fx:%f, fy%f\n", a.fx, a.fy, b.fx, b.fy);*/
+}
+
+void collision(struct ball a, struct ball b, float mass1, float mass2, int size)
+{
+	if (a.x + size < b.x || a.x > b.x + size) return;
+	else if (a.y + size < b.y || a.y > b.y + size) return;
+	else
+	{
+
+		/*float dx = a.x - b.x;//W/H not accounted for since perfect squares
+		float dy = a.y - b.y;
+		int x = 0;
+
+		float wy = size * dy;
+		float hx = size * dx;
+		if (wy > hx)
+		{
+			x = (wy + hx > 0) ? 1 : 2; //one line if statement
+			//impulse(a, b, mass1, mass2, size, x);
+		}
+		else
+		{
+			x = (wy + hx > 0) ? 3 : 4;
+			//impulse(a, b, mass1, mass2, size, x);
+		}*/
+	}
+}
+
 int main(int argc, char **argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
-
+	srand(0);
 	prev_key_state[256];
 	keys = (unsigned char*)SDL_GetKeyboardState(NULL);
 
 	window = SDL_CreateWindow(
 		"I did eet",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		screen_width, screen_height, SDL_WINDOW_SHOWN);
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screen_width, screen_height, SDL_WINDOW_SHOWN);
 
-	renderer = SDL_CreateRenderer(window,
-		-1, SDL_RENDERER_SOFTWARE);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
 	SDL_Surface *your_draw_buffer = SDL_CreateRGBSurfaceWithFormat(0, screen_width, screen_height, 32, SDL_PIXELFORMAT_RGBA32);
 	SDL_Surface *screen = SDL_GetWindowSurface(window);
 	SDL_SetSurfaceBlendMode(your_draw_buffer, SDL_BLENDMODE_NONE);
 	unsigned char *my_own_buffer = (unsigned char*)malloc(sizeof(unsigned char)*screen_width*screen_height * 4);
-	float *data = new float[screen_width * screen_height];
+	ball *balls_array = (ball*)malloc(sizeof(ball)*num_balls);
 
-	float xb = 390;
-	float yb = 290;
-	float xrp = 770;
-	float yrp = 270;
-	float xlp = 10;
-	float ylp = 270;
-	float fx = 1;
-	float fy = 1;
-	int bsize = 20;
-	int paddleh = 60;
-	int paddlew = 20;
+	int bsize = 100;
+	int counter = 0;
+	int t1 = SDL_GetTicks();
+	for (int i = 0; i < num_balls; i++)
+	{
+		balls_array[i].x = rand() % (screen_width - bsize);
+		balls_array[i].y = rand() % (screen_height - bsize);
+		balls_array[i].fx = 1 - 2.0 * rand() / RAND_MAX;
+		balls_array[i].fy = 1 - 2.0 * rand() / RAND_MAX;
+		balls_array[i].r = rand() % 255;
+		balls_array[i].g = rand() % 255;
+		balls_array[i].b = rand() % 255;
+		balls_array[i].a = 255;
+	}
 
 	for (;;)
 	{
 		memcpy(prev_key_state, keys, 256);
-
-		//clear screen
-		for (int i = 0; i < screen_width*screen_height; i++)
-		{
-			my_own_buffer[i * 4] = 0;
-			my_own_buffer[i * 4 + 1] = 0;
-			my_own_buffer[i * 4 + 2] = 0;
-			my_own_buffer[i * 4 + 3] = 0;
-		}
 
 		//consume all window events first
 		SDL_Event event;
@@ -174,88 +254,78 @@ int main(int argc, char **argv)
 			}
 		}
 
-		//ball boundries
-		if (xb <= 0 || xb >= screen_width - bsize)
+		//ball screen bounce
+		for (int i = 0; i < num_balls; i++)
 		{
-			fx *= -1;
-		}
-		if (yb <= 0 || yb >= screen_height - bsize)
-		{
-			fy *= -1;
-		}
-
-		//left paddle cols
-		if (xb <= xlp + paddlew && yb + bsize <= ylp + paddleh && yb + bsize <= ylp + paddleh)
-		{
-			printf("left \n");
-			fx *= -1;
-		}
-
-		//right paddle cols
-		if (xb + bsize >= xrp && yb + bsize >= yrp && yb + bsize <= yrp + paddleh)
-		{
-			fx *= -1;
-		}
-
-		xb += fx;
-		yb += fy;
-
-		if (xb < screen_width * .5 - .5 * bsize)
-		{	
-			if (ylp + paddleh / 2 < yb)
+			if (balls_array[i].x <= 0 || balls_array[i].x >= screen_width - bsize)
 			{
-				ylp++;
+				balls_array[i].fx *= -1;
 			}
-			else if (ylp + paddleh / 2 > yb)
+			if (balls_array[i].y <= 0 || balls_array[i].y >= screen_height - bsize)
 			{
-				ylp--;
+				balls_array[i].fy *= -1;
 			}
+			balls_array[i].x += balls_array[i].fx;
+			balls_array[i].y += balls_array[i].fy;
+			fill_Rectangle(my_own_buffer, screen_width, screen_height, balls_array[i].x, balls_array[i].y,
+				bsize, bsize, balls_array[i].r, balls_array[i].g, balls_array[i].b, balls_array[i].a);
 		}
-		else
+
+		//collision
+		for (int i = 0; i < num_balls; i++)
 		{
-			if (yrp + paddleh / 2 < yb)
+			for (int j = 0; j < num_balls; j++)
 			{
-				yrp++;
-			}
-			else if (yrp + paddleh / 2 > yb)
-			{
-				yrp--;
+				if (i != j)
+				{
+					if (balls_array[i].x + bsize >= balls_array[j].x && balls_array[i].x <= balls_array[j].x)
+					{
+						printf("x %f\n", balls_array[i].fx);
+						balls_array[i].fx *= -1.0;
+						printf("x %f\n", balls_array[i].fx);
+						getchar();
+					}
+					if (balls_array[i].y + bsize >= balls_array[j].y && balls_array[i].y <= balls_array[j].y)
+					{
+						printf("y %f\n", balls_array[i].fy);
+						balls_array[i].fy *= -1.0;
+						printf("y %f\n", balls_array[i].fy);
+						getchar();
+					}
+					//collision(balls_array[i], balls_array[j], 1.0, 1.0, bsize);
+				}
 			}
 		}
-
-		//clip paddles
-		if (ylp > screen_height - paddleh)
+		
+		for (int k = 0; k < num_balls; k++)
 		{
-			ylp = screen_height - paddleh;
+			printf("x to be added %f\n", balls_array[k].fx);
+			balls_array[k].x += balls_array[k].fx;
+			balls_array[k].y += balls_array[k].fy;
 		}
-		if (ylp < paddleh)
-		{
-			ylp = paddleh;
-		}
-		if (yrp > screen_height - paddleh)
-		{
-			yrp = screen_height - paddleh;
-		}
-		if (yrp < paddleh)
-		{
-			yrp = paddleh;
-		}
-
-
-		//left 
-		fill_Rectangle(my_own_buffer, screen_width, screen_height, xlp, ylp, paddlew, paddleh, 255, 0, 0, 255);
-
-		//right
-		fill_Rectangle(my_own_buffer, screen_width, screen_height, xrp, yrp, paddlew, paddleh, 255, 0, 0, 255);
-
-		//ball
-		fill_Rectangle(my_own_buffer, screen_width, screen_height, xb, yb, bsize, bsize, 255, 0, 0, 255);
 
 		memcpy(your_draw_buffer->pixels, my_own_buffer, sizeof(unsigned char)*screen_width*screen_height * 4);
 
 		//BLIT BUFFER TO SCREEN
 		SDL_BlitScaled(your_draw_buffer, NULL, screen, NULL);
 		SDL_UpdateWindowSurface(window);
+
+		for (int i = 0; i < screen_width*screen_height; i++)
+		{
+			my_own_buffer[i * 4] = 0;
+			my_own_buffer[i * 4 + 1] = 0;
+			my_own_buffer[i * 4 + 2] = 0;
+			my_own_buffer[i * 4 + 3] = 0;
+		}
+
+		if (counter++ >= 100)
+		{
+			int t2 = SDL_GetTicks();
+			float time = (t2 - t1) / 100.0;
+			printf("%f\n", time);
+			counter = 0;
+			t1 = SDL_GetTicks();
+		}
 	}
 	return 0;
 }
