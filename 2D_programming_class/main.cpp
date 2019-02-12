@@ -16,13 +16,12 @@ using namespace std;
 SDL_Renderer *renderer = NULL;
 int screen_width = 800;
 int screen_height = 600;
-int num_balls = 100;
+int num_balls = 200;
 
 unsigned char prev_key_state[256];
 unsigned char *keys = NULL;
 SDL_Window *window = NULL;
 
-//Alternative example
 struct Pixel
 {
 	unsigned char r, g, b, a;
@@ -30,7 +29,7 @@ struct Pixel
 
 struct ball
 {
-	float x, y, fx, fy;
+	float x, y, fx, fy, alive;
 	unsigned char r, g, b, a;
 };
 
@@ -188,11 +187,13 @@ void collision(ball *a, ball *b, float mass1, float mass2, int size)
 		if (wy > hx)
 		{
 			x = (wy + hx > 0) ? 3 : 4; //one line if statement
+			a->alive += 1;
 			impulse(a, b, mass1, mass2, size, x);
 		}
 		else
 		{
 			x = (wy + hx > 0) ? 2 : 1;
+			a->alive += 1;
 			impulse(a, b, mass1, mass2, size, x);
 		}
 	}
@@ -224,6 +225,7 @@ int main(int argc, char **argv)
 	{
 		balls_array[i].x = rand() % (screen_width - bsize);
 		balls_array[i].y = rand() % (screen_height - bsize);
+		balls_array[i].alive = 1;
 		balls_array[i].fx = 1 - 2.0 * rand() / RAND_MAX;
 		balls_array[i].fy = 1 - 2.0 * rand() / RAND_MAX;
 		balls_array[i].r = rand() % 255;
@@ -246,17 +248,20 @@ int main(int argc, char **argv)
 			}
 		}
 
-		//ball screen bounce
+		//update and screen bounce
 		for (int i = 0; i < num_balls; i++)
 		{
 			if (balls_array[i].x <= 0 || balls_array[i].x >= screen_width - bsize)
 			{
 				balls_array[i].fx *= -1;
+				balls_array[i].alive += 1;
 			}
 			if (balls_array[i].y <= 0 || balls_array[i].y >= screen_height - bsize)
 			{
 				balls_array[i].fy *= -1;
+				balls_array[i].alive += 1;
 			}
+
 			balls_array[i].x += balls_array[i].fx;
 			balls_array[i].y += balls_array[i].fy;
 			fill_Rectangle(my_own_buffer, screen_width, screen_height, balls_array[i].x, balls_array[i].y,
@@ -273,12 +278,6 @@ int main(int argc, char **argv)
 					collision(&balls_array[i], &balls_array[j], 1.0, 1.0, bsize);
 				}
 			}
-		}
-		
-		for (int k = 0; k < num_balls; k++)
-		{
-			balls_array[k].x += balls_array[k].fx;
-			balls_array[k].y += balls_array[k].fy;
 		}
 
 		memcpy(your_draw_buffer->pixels, my_own_buffer, sizeof(unsigned char)*screen_width*screen_height * 4);
